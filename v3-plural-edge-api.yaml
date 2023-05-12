@@ -1,0 +1,3773 @@
+openapi: 3.0.0
+info:
+  title: V3-Plural-Edge-API
+  version: '1.0'
+  contact:
+    name: Plural By Pinelabs
+    email: pgintegration@pinelabs.com
+  description: V3 API Version of Edge payment gateway
+externalDocs:
+  description: Error Mapping documentation - click here
+  url: 'https://github.com/Plural2023/Plural_Gateway/blob/a8a513a15b125407beecbed2b10f18b5c4005bfa/Plural-Edge-Response-Codes.pdf'
+servers:
+  - url: 'http://localhost:3000'
+paths:
+  /v3/gateway/orders:
+    post:
+      summary: Initiate Order
+      operationId: post-orders
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OrderResponse'
+              examples:
+                Order Response:
+                  value:
+                    token: Tbb29a5H8UtdD7aO1GGpRZ4rgtkKvcUjFb2bBVGjBsoI3d
+                    _links:
+                      checkout_url:
+                        href: 'https://pinepg.in/v3/gateway/payment/Tbb29a5H8UtdD7aO1GGpRZ4rgtkKvcUjFb2bBVGjBsoI3d/checkout'
+                      card_purchase_payment_processing_url:
+                        href: 'https://pinepg.in/v3/gateway/payments/Tbb29a5H8UtdD7aO1GGpRZ4rgtkKvcUjFb2bBVGjBsoI3sd/purchase'
+                      emi_purchase_payment_processing_url:
+                        href: 'https://pinepg.in/v3/gateway/payments/Tbb29a5H8UtdD7aO1GGpRZ4rgtkKvcUjFb2bBVGjBsoI3sd/purchase'
+                      wallet_purchase_payment_processing_url:
+                        href: 'https://pinepg.in/v3/gateway/payments/Tbb29a5H8UtdD7aO1GGpRZ4rgtkKvcUjFb2bBVGjBsoI3sd/purchase'
+                      upi_purchase_payment_processing_url:
+                        href: 'https://pinepg.in/v3/gateway/payments/Tbb29a5H8UtdD7aO1GGpRZ4rgtkKvcUjFb2bBVGjBsoI3sd/purchase'
+                      netbanking_purchase_payment_processing_url:
+                        href: 'https://pinepg.in/v3/gateway/payments/Tbb29a5H8UtdD7aO1GGpRZ4rgtkKvcUjFb2bBVGjBsoI3sd/purchase'
+                      fetch_payment_data_url:
+                        href: 'https://pinepg.in/v3/gateway/fetch-payment-transaction/'
+          headers:
+            X-VERIFY:
+              schema:
+                type: string
+              description: This is SHA256(StringifyJson(response)).This is used to do HMAC Validation of response
+            X-RESPONSE-SEND-TIMESTAMP:
+              schema:
+                type: integer
+              description: response timestamp when plural send the response back to merchant
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                Bad Request:
+                  value:
+                    error_code: XXX
+                    error_message: INVALID_DATA
+                Bad Request with additional error info:
+                  value:
+                    error_code: '-40'
+                    error_message: INVALID_DATA
+                    errors:
+                      - 'merchantData.uniqueReferenceId:size must be between 1 and 50'
+          headers:
+            X-RESPONSE-SEND-TIMESTAMP:
+              schema:
+                type: integer
+              description: response timestamp when plural send the response back to merchant
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+        '409':
+          description: Conflict
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                Duplicate Unique Reference Id:
+                  value:
+                    error_code: '-94'
+                    error_message: DUPLICATE_MERCHANT_TXN_ID
+          headers:
+            X-RESPONSE-SEND-TIMESTAMP:
+              schema:
+                type: integer
+              description: response timestamp when plural send the response back to merchant
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                Internal Server Error:
+                  value:
+                    error_code: XXX
+                    error_message: INTERNAL SERVER ERROR
+          headers:
+            X-RESPONSE-SEND-TIMESTAMP:
+              schema:
+                type: integer
+              description: response timestamp when plural send the response back to merchant
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Order'
+            examples:
+              Order initiation with all data:
+                value:
+                  merchant_data:
+                    id: '106589'
+                    unique_reference_id: TEST-ORDER-786
+                  payment_data:
+                    payment_amount:
+                      amount: 50000
+                      currency: INR
+                  product_details:
+                    - product_code: SM-G950FZKDINS
+                      product_amount:
+                        amount: 50000
+                        currency: INR
+                  customer_data:
+                    email_id: joe.sam@gmail.com
+                    first_name: joe sam
+                    last_name: kumar
+                    customer_id: '786'
+                    mobile_no: '9582492892'
+                    billing_data:
+                      address1: 'H.No 15, Sector 17'
+                      address2: ''
+                      address3: ''
+                      pincode: '144005'
+                      city: CHANDIGARH
+                      state: PUNJAB
+                      country: INDIA
+                    shipping_data:
+                      address1: 'H.No 15, Sector 17'
+                      address2: string
+                      address3: string
+                      pincode: '144005'
+                      city: CHANDIGARH
+                      state: PUNJAB
+                      country: INDIA
+                  additional_data:
+                    udf1: DUMMY1
+                    udf2: DUMMY2
+                    udf3: ''
+                    udf4: ''
+                    udf5: ''
+                    udf6: ''
+                    udf7: ''
+                    udf8: ''
+                    udf9: ''
+                    udf10: ''
+                  checkout_data:
+                    enabled_payment_mode_list:
+                      - mode: CREDIT_DEBIT
+                        channel:
+                          - NONE
+              Order initiation for seamless transaction:
+                value:
+                  merchant_data:
+                    id: '106589'
+                    unique_reference_id: TEST-ORDER-786
+                  payment_data:
+                    payment_amount:
+                      amount: 50000
+                      currency: INR
+                  product_details:
+                    - product_code: SM-G950FZKDINS
+                      product_amount:
+                        amount: 50000
+                        currency: INR
+                  customer_data:
+                    email_id: joe.sam@gmail.com
+                    first_name: joe sam
+                    last_name: kumar
+                    customer_id: '786'
+                    mobile_no: '9582492892'
+                    billing_data:
+                      address1: 'H.No 15, Sector 17'
+                      address2: ''
+                      address3: ''
+                      pincode: '144005'
+                      city: CHANDIGARH
+                      state: PUNJAB
+                      country: INDIA
+                    shipping_data:
+                      address1: 'H.No 15, Sector 17'
+                      address2: string
+                      address3: string
+                      pincode: '144005'
+                      city: CHANDIGARH
+                      state: PUNJAB
+                      country: INDIA
+                  additional_data:
+                    udf1: DUMMY1
+                    udf2: DUMMY2
+                    udf3: ''
+                    udf4: ''
+                    udf5: ''
+                    udf6: ''
+                    udf7: ''
+                    udf8: ''
+                    udf9: ''
+                    udf10: ''
+              Order Initiation without product details:
+                value:
+                  merchant_data:
+                    id: '106589'
+                    unique_reference_id: TEST-ORDER-786
+                  payment_data:
+                    payment_amount:
+                      amount: 50000
+                      currency: INR
+                  customer_data:
+                    email_id: joe.sam@gmail.com
+                    first_name: joe sam
+                    last_name: kumar
+                    customer_id: '786'
+                    mobile_no: '9582492892'
+                    billing_data:
+                      address1: 'H.No 15, Sector 17'
+                      address2: ''
+                      address3: ''
+                      pincode: '144005'
+                      city: CHANDIGARH
+                      state: PUNJAB
+                      country: INDIA
+                    shipping_data:
+                      address1: 'H.No 15, Sector 17'
+                      address2: string
+                      address3: string
+                      pincode: '144005'
+                      city: CHANDIGARH
+                      state: PUNJAB
+                      country: INDIA
+                  additional_data:
+                    udf1: DUMMY1
+                    udf2: DUMMY2
+                    udf3: ''
+                    udf4: ''
+                    udf5: ''
+                    udf6: ''
+                    udf7: ''
+                    udf8: ''
+                    udf9: ''
+                    udf10: ''
+              Order initiation only with mandatory fields:
+                value:
+                  merchant_data:
+                    id: '106589'
+                    unique_reference_id: TEST-ORDER-786
+                  payment_data:
+                    payment_amount:
+                      amount: 50000
+                      currency: INR
+        description: This is the initiate Order Request
+      security:
+        - Edge-Auth: []
+      parameters:
+        - schema:
+            type: string
+            minLength: 1
+            example: 4FE4952303E727096A1001F7555FF9A77786C527980C0E565B4E94FBD6B6BC24
+          in: header
+          name: X-VERIFY
+          required: true
+          description: This is SHA256(StringifyJson(request)).This is used to do HMAC Validation  of request
+        - schema:
+            type: integer
+          in: header
+          name: X-REQUESTED-TIMESTAMP
+          description: api request time stamp initiation at merchant side
+        - schema:
+            type: string
+          in: header
+          name: X-CLIENT-ID
+          description: Applicable if merchant is assigned with client id
+        - schema:
+            type: string
+            enum:
+              - WEB
+              - WAP
+              - MOBILE
+              - SYSTEM
+            example: WEB
+          in: header
+          name: X-CHANNEL-ID
+          description: Platform for which order is initiated. WEB/WAP/MOBILE/SYSTEM
+        - schema:
+            type: string
+            minLength: 1
+          in: header
+          name: X-REDIRECT-URL
+          required: true
+          description: Redirect Url where payment response is posted.
+        - schema:
+            type: string
+          in: header
+          name: X-CALLBACK-URL
+          description: Callback url for S2S payment response
+      description: This API is to initiate order.This is the first api that need to be called by merchant before payment processing.Pinelabs is doing unique validation on Unique Reference Id.This unique reference id is recycled after 15 days.
+      tags:
+        - ORDER
+    parameters: []
+  '/v3/gateway/payments/{token}/purchase':
+    parameters:
+      - schema:
+          type: string
+        name: token
+        in: path
+        required: true
+    post:
+      summary: Purchase Payment
+      operationId: post-v3-gateway-payments-token-purchase
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaymentAPIResponse'
+              examples:
+                Payment Response:
+                  value:
+                    token: Tbb29a5H8UtdD7aO1GGpRZ4rgtkKvcUjFb2bBVGjBsoI3d
+                    redirect_url: 'http://pinepg.in/v3/gateway/payment/{token}/redirect/bank'
+          headers:
+            X-VERIFY:
+              schema:
+                type: string
+              description: This is SHA256(StringifyJson(response)).This is used to do HMAC Validation of response
+            X-RESPONSE-SEND-TIMESTAMP:
+              schema:
+                type: integer
+              description: response timestamp when plural send the response back to merchant
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                Bad Request:
+                  value:
+                    error_code: XXX
+                    error_message: INVALID_DATA
+          headers:
+            X-RESPONSE-SEND-TIMESTAMP:
+              schema:
+                type: integer
+              description: response timestamp when plural send the response back to merchant
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+        '422':
+          description: Unprocessable Entity (WebDAV)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                Acquirer Processing Failed:
+                  value:
+                    error_code: XXX
+                    error_message: ACQUIRER PROCESSING FAILED
+          headers:
+            X-RESPONSE-SEND-TIMESTAMP:
+              schema:
+                type: string
+              description: response timestamp when plural send the response back to merchant
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                Internal Server Error:
+                  value:
+                    error_code: XXX
+                    error_message: INTERNAL_SERVER_ERROR
+          headers:
+            X-RESPONSE-SEND-TIMESTAMP:
+              schema:
+                type: integer
+              description: response timestamp when plural send the response back to merchant
+      description: 'This API is to initiate purchase payment for any payment method card,wallet,netbanking,upi against the order token received in order initiation api'
+      security:
+        - Edge-Auth: []
+      parameters:
+        - schema:
+            type: string
+          in: header
+          name: X-VERIFY
+          required: true
+          description: This is SHA256(StringifyJson(request)).This is used to do HMAC Validation  of request
+        - schema:
+            type: integer
+          in: header
+          name: X-REQUESTED-TIMESTAMP
+          description: api request time stamp initiation at merchant side
+        - schema:
+            type: string
+          in: header
+          name: X-CLIENT-ID
+          description: Applicable if merchant is assigned with client id
+        - schema:
+            type: string
+            enum:
+              - SEAMLESS
+              - CHECKOUT
+              - IFRAME
+            default: SEAMLESS
+            example: SEAMLESS
+          in: header
+          name: X-INTEGRATION-MODE
+          description: Integration mode for which payment is initiated
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PurchaseRequest'
+            examples:
+              Card Transaction Request:
+                value:
+                  payment_method:
+                    type: CREDIT_DEBIT
+                    is_tokenized_transaction: 0
+                  card_data:
+                    card_number: '4012001037141112'
+                    expiry_year: '2023'
+                    expiry_month: '09'
+                    name: Harsh
+                    cvv: '123'
+              Card Transaction Request via Tokens:
+                value:
+                  payment_method:
+                    type: CREDIT_DEBIT
+                    is_tokenized_transaction: 1
+                  token_data:
+                    token: '5200828282828210'
+                    expiry_month: '09'
+                    expiry_year: '2025'
+                    cryptogram: AgAAAAAIKxQRszA4mNO6QWQAAAA=
+                    cvv: '123'
+                    last4Digit: '1112'
+                    par: '4012001037141112'
+                    name: harsh
+              Netbanking Request:
+                value:
+                  netbanking_data:
+                    merchant_payment_code: NB1031
+                  payment_method:
+                    type: NET_BANKING
+                    is_tokenized_transaction: 0
+              Wallet Transaction Request:
+                value:
+                  wallet_data:
+                    merchant_payment_code: phonepe
+                  payment_method:
+                    type: WALLET
+                    is_tokenized_transaction: 0
+              UPI Transaction Request:
+                value:
+                  upi_data:
+                    vpa: harsh.kumar@okhdfcbank
+                    channel: INTENT
+                  payment_method:
+                    type: UPI
+                    is_tokenized_transaction: 0
+        description: 'This is the purchase payment api for cards,wallet,netbanking,upi,emi'
+      tags:
+        - PAYMENT
+  '/v3/gateway/payments/{token}/authorize':
+    parameters:
+      - schema:
+          type: string
+        name: token
+        in: path
+        required: true
+    post:
+      summary: Authorization
+      operationId: post-v3-gateway-payments-token-authorization
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaymentAPIResponse'
+              examples:
+                Payment Response:
+                  value:
+                    token: Tbb29a5H8UtdD7aO1GGpRZ4rgtkKvcUjFb2bBVGjBsoI3d
+                    redirect_url: 'http://pinepg.in/v3/gateway/payment/{token}/redirect/bank'
+          headers:
+            X-VERIFY:
+              schema:
+                type: string
+              description: This is SHA256(StringifyJson(response)).This is used to do HMAC Validation of response
+            X-RESPONSE-SEND-TIMESTAMP:
+              schema:
+                type: integer
+              description: response timestamp when plural send the response back to merchant
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                Bad Request:
+                  value:
+                    error_code: XXX
+                    error_message: INVALID_DATA
+          headers:
+            X-RESPONSE-SEND-TIMESTAMP:
+              schema:
+                type: integer
+              description: response timestamp when plural send the response back to merchant
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+        '422':
+          description: Unprocessable Entity (WebDAV)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                Acquirer Processing Failed:
+                  value:
+                    error_code: XXX
+                    error_message: ACQUIRER PROCESSING FAILED
+          headers:
+            X-RESPONSE-SEND-TIMESTAMP:
+              schema:
+                type: string
+              description: response timestamp when plural send the response back to merchant
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                Internal Server Error:
+                  value:
+                    error_code: XXX
+                    error_message: INTERNAL_SERVER_ERROR
+          headers:
+            X-RESPONSE-SEND-TIMESTAMP:
+              schema:
+                type: integer
+              description: response timestamp when plural send the response back to merchant
+      description: This API is to initiate preauth payment for cards against the order token received in order initiation api.
+      security:
+        - Edge-Auth: []
+      parameters:
+        - schema:
+            type: string
+          in: header
+          name: X-VERIFY
+          required: true
+          description: This is SHA256(StringifyJson(request)).This is used to do HMAC Validation  of request
+        - schema:
+            type: integer
+          in: header
+          name: X-REQUESTED-TIMESTAMP
+          description: api request time stamp initiation at merchant side
+        - schema:
+            type: string
+          in: header
+          name: X-CLIENT-ID
+          description: Applicable if merchant is assigned with client id
+        - schema:
+            type: string
+            enum:
+              - SEAMLESS
+              - CHECKOUT
+              - IFRAME
+            default: SEAMLESS
+          example: SEAMLESS
+          in: header
+          name: X-INTEGRATION-MODE
+          description: Integration mode for which payment is initiated
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AuthRequest'
+            examples:
+              Card Auth Request:
+                value:
+                  payment_method:
+                    type: CREDIT_DEBIT
+                    is_tokenized_transaction: 0
+                  card_data:
+                    card_number: '4012001037141112'
+                    cvv: '123'
+                    expiry_month: '09'
+                    expiry_year: '2025'
+                  payment_configuration:
+                    auth_blocking_time_in_sec: 432000
+                    is_native_otp_flow: 1
+              Card Auth Request via tokens:
+                value:
+                  payment_method:
+                    type: CREDIT_DEBIT
+                    is_tokenized_transaction: 1
+                  token_data:
+                    token: '5200828282828210'
+                    expiry_month: '09'
+                    expiry_year: '2025'
+                    cryptogram: AgAAAAAIKxQRszA4mNO6QWQAAAA=
+                    cvv: '123'
+                    last4Digit: '1112'
+                    par: '4012001037141112'
+                    name: harsh
+                  payment_configuration:
+                    auth_blocking_time_in_sec: 432000
+                    is_native_otp_flow: 1
+        description: This is the preauth payment api for cards to authorize the transaction
+      tags:
+        - PAYMENT
+  '/v3/gateway/authorizations/{auth_transaction_id}/capture':
+    parameters:
+      - schema:
+          type: string
+        name: auth_transaction_id
+        in: path
+        required: true
+    post:
+      summary: Capture
+      operationId: post-v3-gateway-authorizations-auth_transaction_id-capture
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CompletePaymentResponse'
+              examples:
+                Payment Capture Response:
+                  value:
+                    merchant_data:
+                      id: '106589'
+                      unique_reference_id: TEST-ORDER-786
+                    payment_data:
+                      payment_amount:
+                        amount: 50000
+                        currency: INR
+                      authorized_amount:
+                        amount: 50000
+                        currency: INR
+                      captured_amount:
+                        amount: 50000
+                        currency: INR
+                      convenience_fees_amount:
+                        amount: 0.00'
+                        currency: INR
+                      convenience_fees_gst_amount:
+                        amount: 0.00'
+                        currency: INR
+                      convenience_fees_additional_amount:
+                        amount: 0.00'
+                        currency: INR
+                      refunded_amount:
+                        amount: 0.00'
+                        currency: INR
+                      max_amount_can_be_refunded:
+                        amount: 50000
+                        currency: INR
+                    transaction_data:
+                      transaction_info:
+                        - plural_transaction_id: '78612345'
+                          payment_mode: CREDIT_DEBIT
+                          is_surcharge_txn: 0
+                          transaction_status: CAPTURED
+                          completion_date_time: '29/03/2023 12:53:13 PM'
+                          response_code: '1'
+                          response_msg: SUCCESS
+                          acquirer_data:
+                            response_code: '00'
+                            response_message: APPROVED
+                            name: CYBERSOURCE
+                            rrn: '3234284284993'
+                            arn: ''
+                            auth_id: '123456'
+                            reference_id: '98443894934345'
+                            auth_code: '123456'
+                          card_data:
+                            card_holder_name: harsh
+                            salted_card_hash: AW434FMFDJNFJIHRNBRHRNDJDNDKLDLEDBB2323
+                            masked_card_number: XXXXXXXXXXXXX1112
+                            issuer_name: HDFC
+                          netbanking_data:
+                            bank_acoount_number: ''
+                            bank_name: ''
+                          wallet_data:
+                            wallet_name: ''
+                          upi_data:
+                            vpa: ''
+                            channel: ''
+                          emi_data: {}
+                          subscription_data: {}
+                          txn_additional_info: ''
+                    additional_data:
+                      udf1: DUMMY1
+                      udf2: DUMMY2
+                      udf3: ''
+                      udf4: ''
+                      udf5: ''
+                      udf6: ''
+                      udf7: ''
+                      udf8: ''
+                      udf9: ''
+                      udf10: ''
+                    customer_data:
+                      email_id: joe.sam@gmail.com
+                      first_name: joe sam
+                      last_name: ''
+                      customer_id: '786'
+                      mobile_no: '9582492892'
+                      billing_data:
+                        address1: HNo 15 Sector 17
+                        address2: ''
+                        address3: ''
+                        pincode: '144005'
+                        city: CHANDIGARH
+                        state: PUNJAB
+                        country: INDIA
+                      shipping_data:
+                        address1: HNo 15 Sector 17
+                        address2: ''
+                        address3: ''
+                        pincode: '144005'
+                        city: CHANDIGARH
+                        state: PUNJAB
+                        country: INDIA
+                Payment Capture For EMI Transaction On Single Cart:
+                  value:
+                    merchant_data:
+                      id: '106589'
+                      unique_reference_id: TEST-ORDER-786
+                    payment_data:
+                      payment_amount:
+                        amount: 50000
+                        currency: INR
+                      authorized_amount:
+                        amount: 50000
+                        currency: INR
+                      captured_amount:
+                        amount: 50000
+                        currency: INR
+                      convenience_fees_amount:
+                        amount: 0.00'
+                        currency: INR
+                      convenience_fees_gst_amount:
+                        amount: 0.00'
+                        currency: INR
+                      convenience_fees_additional_amount:
+                        amount: 0.00'
+                        currency: INR
+                      refunded_amount:
+                        amount: 0.00'
+                        currency: INR
+                      max_amount_can_be_refunded:
+                        amount: 50000
+                        currency: INR
+                    transaction_data:
+                      transaction_info:
+                        - plural_transaction_id: '78612345'
+                          payment_mode: EMI
+                          is_surcharge_txn: 0
+                          transaction_status: CAPTURED
+                          completion_date_time: '29/03/2023 12:53:13 PM'
+                          response_code: '1'
+                          response_msg: SUCCESS
+                          acquirer_data:
+                            response_code: '00'
+                            response_message: APPROVED
+                            name: CYBERSOURCE
+                            rrn: '3234284284993'
+                            arn: ''
+                            auth_id: '123456'
+                            reference_id: '98443894934345'
+                            auth_code: '123456'
+                          card_data:
+                            card_holder_name: harsh
+                            salted_card_hash: AW434FMFDJNFJIHRNBRHRNDJDNDKLDLEDBB2323
+                            masked_card_number: XXXXXXXXXXXXX1112
+                            issuer_name: HDFC
+                          netbanking_data:
+                            bank_acoount_number: ''
+                            bank_name: ''
+                          wallet_data:
+                            wallet_name: ''
+                          upi_data:
+                            vpa: ''
+                            channel: ''
+                          emi_data:
+                            channel: CREDIT
+                            emi_model_type: SINGLE_CART
+                            offer_scheme:
+                              product_details:
+                                - schemes:
+                                    - scheme_id: 217579
+                                      program_type: BRAND_EMI
+                                      is_scheme_valid: true
+                                  product_code: '267022'
+                                  product_amount:
+                                    amount: 5000000
+                                    currency: INR
+                                  pine_product_code: 786ABC
+                                  product_display_name: Iphone
+                                  subvention_type: STANDARD_EMI
+                                  cashback_type: NONE
+                                  total_subvention_cashback_discount:
+                                    amount: 0
+                                    currency: INR
+                                  total_product_discount:
+                                    amount: 0
+                                    currency: INR
+                                  issuer_subvention_cashback_discount:
+                                    amount: 0
+                                    currency: INR
+                                  issuer_product_discount:
+                                    amount: 0
+                                    currency: INR
+                                  merchant_subvention_cashback_discount:
+                                    amount: 0
+                                    currency: INR
+                                  merchant_product_discount:
+                                    amount: 0
+                                    currency: INR
+                                  oem_subvention_cashback_discount:
+                                    amount: 0
+                                    currency: INR
+                                  oem_product_discount:
+                                    amount: 0
+                                    currency: INR
+                                  oem_subvention_cashback_discount_percentage: 0
+                                  oem_product_discount_percentage: 0
+                                  network_subvention_cashback_discount_percentage: 0
+                                  network_product_discount_percentage: 0
+                                  merchant_subvention_cashback_discount_percentage: 0
+                                  merchant_product_discount_percentage: 0
+                                  issuer_subvention_cashback_discount_percentage: 0
+                                  issuer_product_discount_percentage: 0
+                                  bank_interest_rate_percentage: 200000
+                                  bank_interest_amount: 295666
+                                  additional_cashback: ''
+                                  is_icb: 0
+                              emi_scheme: null
+                            tenure_id: '6'
+                            tenure_in_month: '6'
+                            monthly_installment:
+                              amount: 882611
+                              currency: INR
+                            bank_interest_rate: 200000
+                            interest_pay_to_bank:
+                              amount: 295666
+                              currency: INR
+                            total_offerred_discount_cashback_amount:
+                              amount: 0
+                              currency: INR
+                            loan_amount:
+                              amount: 5000000
+                              currency: INR
+                            auth_amount:
+                              amount: 5000000
+                              currency: INR
+                            card_holder_name: harsh
+                            salted_card_hash: AW434FMFDJNFJIHRNBRHRNDJDNDKLDLEDBB2323
+                            masked_card_number: XXXXXXXXXXXX1112
+                            issuer_name: HDFC
+                            mobile_no: '9582492891'
+                          subscription_data: {}
+                          txn_additional_info: ''
+                    additional_data:
+                      udf1: DUMMY1
+                      udf2: DUMMY2
+                      udf3: ''
+                      udf4: ''
+                      udf5: ''
+                      udf6: ''
+                      udf7: ''
+                      udf8: ''
+                      udf9: ''
+                      udf10: ''
+                    customer_data:
+                      email_id: joe.sam@gmail.com
+                      first_name: joe sam
+                      last_name: ''
+                      customer_id: '786'
+                      mobile_no: '9582492892'
+                      billing_data:
+                        address1: HNo 15 Sector 17
+                        address2: ''
+                        address3: ''
+                        pincode: '144005'
+                        city: CHANDIGARH
+                        state: PUNJAB
+                        country: INDIA
+                      shipping_data:
+                        address1: HNo 15 Sector 17
+                        address2: ''
+                        address3: ''
+                        pincode: '144005'
+                        city: CHANDIGARH
+                        state: PUNJAB
+                        country: INDIA
+                Payment Capture for EMI Transaction on MultiCart Model:
+                  value:
+                    merchant_data:
+                      id: '106589'
+                      unique_reference_id: TEST-ORDER-786
+                    payment_data:
+                      payment_amount:
+                        amount: 50000
+                        currency: INR
+                      authorized_amount:
+                        amount: 50000
+                        currency: INR
+                      captured_amount:
+                        amount: 50000
+                        currency: INR
+                      convenience_fees_amount:
+                        amount: 0.00'
+                        currency: INR
+                      convenience_fees_gst_amount:
+                        amount: 0.00'
+                        currency: INR
+                      convenience_fees_additional_amount:
+                        amount: 0.00'
+                        currency: INR
+                      refunded_amount:
+                        amount: 0.00'
+                        currency: INR
+                      max_amount_can_be_refunded:
+                        amount: 50000
+                        currency: INR
+                    transaction_data:
+                      transaction_info:
+                        - plural_transaction_id: '78612345'
+                          payment_mode: EMI
+                          is_surcharge_txn: 0
+                          transaction_status: CAPTURED
+                          completion_date_time: '29/03/2023 12:53:13 PM'
+                          response_code: '1'
+                          response_msg: SUCCESS
+                          acquirer_data:
+                            response_code: '00'
+                            response_message: APPROVED
+                            name: CYBERSOURCE
+                            rrn: '3234284284993'
+                            arn: ''
+                            auth_id: '123456'
+                            reference_id: '98443894934345'
+                            auth_code: '123456'
+                          card_data:
+                            card_holder_name: harsh
+                            salted_card_hash: AW434FMFDJNFJIHRNBRHRNDJDNDKLDLEDBB2323
+                            masked_card_number: XXXXXXXXXXXXX1112
+                            issuer_name: HDFC
+                          netbanking_data:
+                            bank_acoount_number: ''
+                            bank_name: ''
+                          wallet_data:
+                            wallet_name: ''
+                          upi_data:
+                            vpa: ''
+                            channel: ''
+                          emi_data:
+                            channel: CREDIT
+                            emi_model_type: MULTI_CART
+                            offer_scheme:
+                              product_details:
+                                - schemes:
+                                    - scheme_id: 217579
+                                      program_type: BRAND_SUBVENTION_EMI
+                                      is_scheme_valid: true
+                                    - scheme_id: 217578
+                                      program_type: BRAND_OFF_US_INSTANT_DISCOUNT
+                                      is_scheme_valid: true
+                                  product_code: '267022'
+                                  product_amount:
+                                    amount: 5000000
+                                    currency: INR
+                                  pine_product_code: 786ABC
+                                  product_display_name: Iphone
+                                  subvention_type: NO_COST_EMI
+                                  cashback_type: INSTANT_DISCOUNT
+                                  total_subvention_cashback_discount:
+                                    amount: 100
+                                    currency: INR
+                                  total_product_discount:
+                                    amount: 100
+                                    currency: INR
+                                  issuer_subvention_cashback_discount:
+                                    amount: 0
+                                    currency: INR
+                                  issuer_product_discount:
+                                    amount: 0
+                                    currency: INR
+                                  merchant_subvention_cashback_discount:
+                                    amount: 0
+                                    currency: INR
+                                  merchant_product_discount:
+                                    amount: 0
+                                    currency: INR
+                                  oem_subvention_cashback_discount:
+                                    amount: 100
+                                    currency: INR
+                                  oem_product_discount:
+                                    amount: 100
+                                    currency: INR
+                                  oem_subvention_cashback_discount_percentage: 0
+                                  oem_product_discount_percentage: 0
+                                  network_subvention_cashback_discount_percentage: 0
+                                  network_product_discount_percentage: 0
+                                  merchant_subvention_cashback_discount_percentage: 0
+                                  merchant_product_discount_percentage: 0
+                                  issuer_subvention_cashback_discount_percentage: 0
+                                  issuer_product_discount_percentage: 0
+                                  bank_interest_rate_percentage: 200000
+                                  bank_interest_amount: 295666
+                                  additional_cashback: ''
+                                  is_icb: 0
+                              emi_scheme:
+                                scheme_id: 217577
+                                program_type: BANK_EMI
+                                is_scheme_valid: true
+                            tenure_id: '6'
+                            tenure_in_month: '6'
+                            monthly_installment:
+                              amount: 882611
+                              currency: INR
+                            bank_interest_rate: 200000
+                            interest_pay_to_bank:
+                              amount: 295666
+                              currency: INR
+                            total_offerred_discount_cashback_amount:
+                              amount: 200
+                              currency: INR
+                            loan_amount:
+                              amount: 4999800
+                              currency: INR
+                            auth_amount:
+                              amount: 4999800
+                              currency: INR
+                            card_holder_name: harsh
+                            salted_card_hash: AW434FMFDJNFJIHRNBRHRNDJDNDKLDLEDBB2323
+                            masked_card_number: XXXXXXXXXXXX1112
+                            issuer_name: HDFC
+                            mobile_no: '9582492891'
+                          subscription_data: {}
+                          txn_additional_info: ''
+                    additional_data:
+                      udf1: DUMMY1
+                      udf2: DUMMY2
+                      udf3: ''
+                      udf4: ''
+                      udf5: ''
+                      udf6: ''
+                      udf7: ''
+                      udf8: ''
+                      udf9: ''
+                      udf10: ''
+                    customer_data:
+                      email_id: joe.sam@gmail.com
+                      first_name: joe sam
+                      last_name: ''
+                      customer_id: '786'
+                      mobile_no: '9582492892'
+                      billing_data:
+                        address1: HNo 15 Sector 17
+                        address2: ''
+                        address3: ''
+                        pincode: '144005'
+                        city: CHANDIGARH
+                        state: PUNJAB
+                        country: INDIA
+                      shipping_data:
+                        address1: HNo 15 Sector 17
+                        address2: ''
+                        address3: ''
+                        pincode: '144005'
+                        city: CHANDIGARH
+                        state: PUNJAB
+                        country: INDIA
+          headers:
+            X-VERIFY:
+              schema:
+                type: string
+              description: This is SHA256(StringifyJson(response)).This is used to do HMAC Validation of response
+            X-RESPONSE-SEND-TIMESTAMP:
+              schema:
+                type: integer
+              description: response timestamp when plural send the response back to merchant
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                Bad Request:
+                  value:
+                    error_code: XXX
+                    error_message: INVALID_DATA
+          headers:
+            X-RESPONSE-SEND-TIMESTAMP:
+              schema:
+                type: integer
+              description: response timestamp when plural send the response back to merchant
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+        '422':
+          description: Unprocessable Entity (WebDAV)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                Acquirer Processing Failed:
+                  value:
+                    error_code: XXX
+                    error_message: ACQUIRER PROCESSING FAILED
+          headers:
+            X-RESPONSE-SEND-TIMESTAMP:
+              schema:
+                type: string
+              description: response timestamp when plural send the response back to merchant
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                Internal Server Error:
+                  value:
+                    error_code: XXX
+                    error_message: INTERNAL_SERVER_ERROR
+          headers:
+            X-RESPONSE-SEND-TIMESTAMP:
+              schema:
+                type: integer
+              description: response timestamp when plural send the response back to merchant
+      description: This API is to capture the preauth payment for cards against the plural transaction id received in redirect response or webhook response of authorization api
+      security:
+        - Edge-Auth: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CaptureRequest'
+            examples:
+              Capture Request:
+                value:
+                  payment_data:
+                    capture_amount:
+                      amount: 50000
+                      currency: INR
+                  capture_type: COMPLETE
+        description: This is the payment api for to capture the transaction.Currently applicable for cards transaction
+      parameters:
+        - schema:
+            type: string
+          in: header
+          name: X-VERIFY
+          required: true
+          description: This is SHA256(StringifyJson(request)).This is used to do HMAC Validation  of request
+        - schema:
+            type: integer
+          in: header
+          name: X-REQUESTED-TIMESTAMP
+          description: api request time stamp initiation at merchant side
+        - schema:
+            type: string
+          in: header
+          name: X-CLIENT-ID
+          description: Applicable if merchant is assigned with client id
+        - schema:
+            type: string
+            enum:
+              - WEB
+              - WAP
+              - MOBILE
+              - SYSTEM
+          in: header
+          name: X-CHANNEL-ID
+          example: WEB
+          description: Platform for which order is initiated. WEB/WAP/MOBILE/SYSTEM
+      tags:
+        - PAYMENT
+  '/v3/gateway/payments/{transaction_id}/refund':
+    parameters:
+      - schema:
+          type: string
+        name: transaction_id
+        in: path
+        required: true
+    post:
+      summary: Refund
+      operationId: post-v3-gateway-payments-transaction_id-refund
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CompletePaymentResponse'
+              examples:
+                Refund Response:
+                  value:
+                    merchant_data:
+                      id: '106589'
+                      unique_reference_id: TEST-ORDER-786
+                    payment_data:
+                      payment_amount:
+                        amount: 50000
+                        currency: INR
+                      authorized_amount:
+                        amount: 50000
+                        currency: INR
+                      captured_amount:
+                        amount: 50000
+                        currency: INR
+                      convenience_fees_amount:
+                        amount: 0.00'
+                        currency: INR
+                      convenience_fees_gst_amount:
+                        amount: 0.00'
+                        currency: INR
+                      convenience_fees_additional_amount:
+                        amount: 0.00'
+                        currency: INR
+                      refunded_amount:
+                        amount: 50000
+                        currency: INR
+                      max_amount_can_be_refunded:
+                        amount: 50000
+                        currency: INR
+                    transaction_data:
+                      transaction_info:
+                        - plural_transaction_id: '78612345'
+                          payment_mode: CREDIT_DEBIT
+                          is_surcharge_txn: 0
+                          transaction_status: REFUNDED
+                          completion_date_time: '29/03/2023 12:53:13 PM'
+                          response_code: '1'
+                          response_msg: SUCCESS
+                          acquirer_data:
+                            response_code: '00'
+                            response_message: APPROVED
+                            name: CYBERSOURCE
+                            rrn: '3234284284993'
+                            arn: ''
+                            auth_id: '123456'
+                            reference_id: '98443894934345'
+                            auth_code: '123456'
+                          card_data:
+                            card_holder_name: harsh
+                            salted_card_hash: AW434FMFDJNFJIHRNBRHRNDJDNDKLDLEDBB2323
+                            masked_card_number: XXXXXXXXXXXXX1112
+                            issuer_name: HDFC
+                          netbanking_data:
+                            bank_acoount_number: ''
+                            bank_name: ''
+                          wallet_data:
+                            wallet_name: ''
+                          upi_data:
+                            vpa: ''
+                            channel: ''
+                          emi_data: {}
+                          subscription_data: {}
+                          txn_additional_info: ''
+                    additional_data:
+                      udf1: DUMMY1
+                      udf2: DUMMY2
+                      udf3: ''
+                      udf4: ''
+                      udf5: ''
+                      udf6: ''
+                      udf7: ''
+                      udf8: ''
+                      udf9: ''
+                      udf10: ''
+                    customer_data:
+                      email_id: joe.sam@gmail.com
+                      first_name: joe sam
+                      last_name: ''
+                      customer_id: '786'
+                      mobile_no: '9582492892'
+                      billing_data:
+                        address1: HNo 15 Sector 17
+                        address2: ''
+                        address3: ''
+                        pincode: '144005'
+                        city: CHANDIGARH
+                        state: PUNJAB
+                        country: INDIA
+                      shipping_data:
+                        address1: HNo 15 Sector 17
+                        address2: ''
+                        address3: ''
+                        pincode: '144005'
+                        city: CHANDIGARH
+                        state: PUNJAB
+                        country: INDIA
+          headers:
+            X-VERIFY:
+              schema:
+                type: string
+              description: This is SHA256(StringifyJson(response)).This is used to do HMAC Validation of response
+            X-RESPONSE-SEND-TIMESTAMP:
+              schema:
+                type: integer
+              description: response timestamp when plural send the response back to merchant
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                Bad Request:
+                  value:
+                    error_code: XXX
+                    error_message: INVALID_DATA
+          headers:
+            X-RESPONSE-SEND-TIMESTAMP:
+              schema:
+                type: integer
+              description: response timestamp when plural send the response back to merchant
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+        '422':
+          description: Unprocessable Entity (WebDAV)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                Acquirer Processing Failed:
+                  value:
+                    error_code: XXX
+                    error_message: ACQUIRER PROCESSING FAILED
+          headers:
+            X-RESPONSE-SEND-TIMESTAMP:
+              schema:
+                type: string
+              description: response timestamp when plural send the response back to merchant
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                Internal Server Error:
+                  value:
+                    error_code: XXX
+                    error_message: INTERNAL_SERVER_ERROR
+          headers:
+            X-RESPONSE-SEND-TIMESTAMP:
+              schema:
+                type: integer
+              description: response timestamp when plural send the response back to merchant
+      description: This API is to refund the capture transaction against plural transaction id.Unique Reference Id is just for audit purpose.Plural is not doing any validation on unique reference id.
+      security:
+        - Edge-Auth: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RefundRequest'
+            examples:
+              Refund Request:
+                value:
+                  merchant_data:
+                    id: '106589'
+                    unique_reference_id: TEST-ORDER-786
+                  payment_data:
+                    refund_amount:
+                      amount: 50000
+                      currency: INR
+        description: This is the api to refund the capture transaction
+      parameters:
+        - schema:
+            type: string
+          in: header
+          name: X-VERIFY
+          required: true
+          description: This is SHA256(StringifyJson(request)).This is used to do HMAC Validation  of request
+        - schema:
+            type: integer
+          in: header
+          name: X-REQUESTED-TIMESTAMP
+          description: api request time stamp initiation at merchant side
+        - schema:
+            type: string
+          in: header
+          name: X-CLIENT-ID
+          description: Applicable if merchant is assigned with client id
+      tags:
+        - POST-PAYMENT
+  '/v3/gateway/authorizations/{auth_transaction_id}/void':
+    parameters:
+      - schema:
+          type: string
+        name: auth_transaction_id
+        in: path
+        required: true
+    post:
+      summary: Void
+      operationId: post-v3-gateway-authorizations-auth_transaction_id-void
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CompletePaymentResponse'
+              examples:
+                Void Response:
+                  value:
+                    merchant_data:
+                      id: '106589'
+                      unique_reference_id: TEST-ORDER-786
+                    payment_data:
+                      payment_amount:
+                        amount: 50000
+                        currency: INR
+                      authorized_amount:
+                        amount: 50000
+                        currency: INR
+                      captured_amount:
+                        amount: 50000
+                        currency: INR
+                      convenience_fees_amount:
+                        amount: 0.00'
+                        currency: INR
+                      convenience_fees_gst_amount:
+                        amount: 0.00'
+                        currency: INR
+                      convenience_fees_additional_amount:
+                        amount: 0.00'
+                        currency: INR
+                      refunded_amount:
+                        amount: 50000
+                        currency: INR
+                      max_amount_can_be_refunded:
+                        amount: 50000
+                        currency: INR
+                    transaction_data:
+                      transaction_info:
+                        - plural_transaction_id: '78612345'
+                          payment_mode: CREDIT_DEBIT
+                          is_surcharge_txn: 0
+                          transaction_status: VOIDED
+                          completion_date_time: '29/03/2023 12:53:13 PM'
+                          response_code: '1'
+                          response_msg: SUCCESS
+                          acquirer_data:
+                            response_code: '00'
+                            response_message: APPROVED
+                            name: CYBERSOURCE
+                            rrn: '3234284284993'
+                            arn: ''
+                            auth_id: '123456'
+                            reference_id: '98443894934345'
+                            auth_code: '123456'
+                          card_data:
+                            card_holder_name: harsh
+                            salted_card_hash: AW434FMFDJNFJIHRNBRHRNDJDNDKLDLEDBB2323
+                            masked_card_number: XXXXXXXXXXXXX1112
+                            issuer_name: HDFC
+                          netbanking_data:
+                            bank_acoount_number: ''
+                            bank_name: ''
+                          wallet_data:
+                            wallet_name: ''
+                          upi_data:
+                            vpa: ''
+                            channel: ''
+                          emi_data: {}
+                          subscription_data: {}
+                          txn_additional_info: ''
+                    additional_data:
+                      udf1: DUMMY1
+                      udf2: DUMMY2
+                      udf3: ''
+                      udf4: ''
+                      udf5: ''
+                      udf6: ''
+                      udf7: ''
+                      udf8: ''
+                      udf9: ''
+                      udf10: ''
+                    customer_data:
+                      email_id: joe.sam@gmail.com
+                      first_name: joe sam
+                      last_name: ''
+                      customer_id: '786'
+                      mobile_no: '9582492892'
+                      billing_data:
+                        address1: HNo 15 Sector 17
+                        address2: ''
+                        address3: ''
+                        pincode: '144005'
+                        city: CHANDIGARH
+                        state: PUNJAB
+                        country: INDIA
+                      shipping_data:
+                        address1: HNo 15 Sector 17
+                        address2: ''
+                        address3: ''
+                        pincode: '144005'
+                        city: CHANDIGARH
+                        state: PUNJAB
+                        country: INDIA
+          headers:
+            X-VERIFY:
+              schema:
+                type: string
+              description: This is SHA256(StringifyJson(response)).This is used to do HMAC Validation of response
+            X-RESPONSE-SEND-TIMESTAMP:
+              schema:
+                type: integer
+              description: response timestamp when plural send the response back to merchant
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                Bad Request:
+                  value:
+                    error_code: XXX
+                    error_message: INVALID_DATA
+          headers:
+            X-RESPONSE-SEND-TIMESTAMP:
+              schema:
+                type: integer
+              description: response timestamp when plural send the response back to merchant
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+        '422':
+          description: Unprocessable Entity (WebDAV)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                Acquirer Processing Failed:
+                  value:
+                    error_code: XXX
+                    error_message: ACQUIRER PROCESSING FAILED
+          headers:
+            X-RESPONSE-SEND-TIMESTAMP:
+              schema:
+                type: string
+              description: response timestamp when plural send the response back to merchant
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                Internal Server Error:
+                  value:
+                    error_code: XXX
+                    error_message: INTERNAL_SERVER_ERROR
+          headers:
+            X-RESPONSE-SEND-TIMESTAMP:
+              schema:
+                type: integer
+              description: response timestamp when plural send the response back to merchant
+      description: This API is to void the authorize transaction against plural transaction id.It is currently only applicable for pre auth transactions
+      security:
+        - Edge-Auth: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/VoidRequest'
+            examples:
+              Void Request:
+                value:
+                  merchant_data:
+                    id: '106589'
+                    unique_reference_id: TEST-ORDER-786
+        description: This is the api to void the authorized transaction in preauth sale model
+      parameters:
+        - schema:
+            type: string
+          in: header
+          name: X-VERIFY
+          required: true
+          description: This is SHA256(StringifyJson(request)).This is used to do HMAC Validation  of request
+        - schema:
+            type: integer
+          in: header
+          name: X-REQUESTED-TIMESTAMP
+          description: api request time stamp initiation at merchant side
+        - schema:
+            type: string
+          in: header
+          name: X-CLIENT-ID
+          description: Applicable if merchant is assigned with client id
+      tags:
+        - POST-PAYMENT
+  /v3/gateway/fetch-payment-transaction:
+    post:
+      summary: Fetch Payment Details
+      operationId: post-v3-gateway-fetch-payment-transaction
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CompletePaymentResponse'
+              examples:
+                Payment Response:
+                  value:
+                    merchant_data:
+                      id: '106589'
+                      unique_reference_id: TEST-ORDER-786
+                    payment_data:
+                      payment_amount:
+                        amount: 50000
+                        currency: INR
+                      authorized_amount:
+                        amount: 50000
+                        currency: INR
+                      captured_amount:
+                        amount: 50000
+                        currency: INR
+                      convenience_fees_amount:
+                        amount: 0.00'
+                        currency: INR
+                      convenience_fees_gst_amount:
+                        amount: 0.00'
+                        currency: INR
+                      convenience_fees_additional_amount:
+                        amount: 0.00'
+                        currency: INR
+                      refunded_amount:
+                        amount: 0.00'
+                        currency: INR
+                      max_amount_can_be_refunded:
+                        amount: 50000
+                        currency: INR
+                    transaction_data:
+                      transaction_info:
+                        - plural_transaction_id: '78612345'
+                          payment_mode: EMI
+                          is_surcharge_txn: 0
+                          transaction_status: CAPTURED
+                          completion_date_time: '29/03/2023 12:53:13 PM'
+                          response_code: '1'
+                          response_msg: SUCCESS
+                          acquirer_data:
+                            response_code: '00'
+                            response_message: APPROVED
+                            name: CYBERSOURCE
+                            rrn: '3234284284993'
+                            arn: ''
+                            auth_id: '123456'
+                            reference_id: '98443894934345'
+                            auth_code: '123456'
+                          card_data:
+                            card_holder_name: harsh
+                            salted_card_hash: AW434FMFDJNFJIHRNBRHRNDJDNDKLDLEDBB2323
+                            masked_card_number: XXXXXXXXXXXXX1112
+                            issuer_name: HDFC
+                          netbanking_data:
+                            bank_acoount_number: ''
+                            bank_name: ''
+                          wallet_data:
+                            wallet_name: ''
+                          upi_data:
+                            vpa: ''
+                            channel: ''
+                          emi_data:
+                            channel: CREDIT
+                            emi_model_type: SINGLE_CART
+                            offer_scheme:
+                              product_details:
+                                - schemes:
+                                    - scheme_id: 217579
+                                      program_type: BRAND_EMI
+                                      is_scheme_valid: true
+                                  product_code: '267022'
+                                  product_amount:
+                                    amount: 5000000
+                                    currency: INR
+                                  pine_product_code: 786ABC
+                                  product_display_name: Iphone
+                                  subvention_type: STANDARD_EMI
+                                  cashback_type: NONE
+                                  total_subvention_cashback_discount:
+                                    amount: 0
+                                    currency: INR
+                                  total_product_discount:
+                                    amount: 0
+                                    currency: INR
+                                  issuer_subvention_cashback_discount:
+                                    amount: 0
+                                    currency: INR
+                                  issuer_product_discount:
+                                    amount: 0
+                                    currency: INR
+                                  merchant_subvention_cashback_discount:
+                                    amount: 0
+                                    currency: INR
+                                  merchant_product_discount:
+                                    amount: 0
+                                    currency: INR
+                                  oem_subvention_cashback_discount:
+                                    amount: 0
+                                    currency: INR
+                                  oem_product_discount:
+                                    amount: 0
+                                    currency: INR
+                                  oem_subvention_cashback_discount_percentage: 0
+                                  oem_product_discount_percentage: 0
+                                  network_subvention_cashback_discount_percentage: 0
+                                  network_product_discount_percentage: 0
+                                  merchant_subvention_cashback_discount_percentage: 0
+                                  merchant_product_discount_percentage: 0
+                                  issuer_subvention_cashback_discount_percentage: 0
+                                  issuer_product_discount_percentage: 0
+                                  bank_interest_rate_percentage: 200000
+                                  bank_interest_amount: 295666
+                                  additional_cashback: ''
+                                  is_icb: 0
+                              emi_scheme: null
+                            tenure_id: '6'
+                            tenure_in_month: '6'
+                            monthly_installment:
+                              amount: 882611
+                              currency: INR
+                            bank_interest_rate: 200000
+                            interest_pay_to_bank:
+                              amount: 295666
+                              currency: INR
+                            total_offerred_discount_cashback_amount:
+                              amount: 0
+                              currency: INR
+                            loan_amount:
+                              amount: 5000000
+                              currency: INR
+                            auth_amount:
+                              amount: 5000000
+                              currency: INR
+                            card_holder_name: harsh
+                            salted_card_hash: AW434FMFDJNFJIHRNBRHRNDJDNDKLDLEDBB2323
+                            masked_card_number: XXXXXXXXXXXX1112
+                            issuer_name: HDFC
+                            mobile_no: '9582492891'
+                          subscription_data: {}
+                          txn_additional_info: ''
+                    additional_data:
+                      udf1: DUMMY1
+                      udf2: DUMMY2
+                      udf3: ''
+                      udf4: ''
+                      udf5: ''
+                      udf6: ''
+                      udf7: ''
+                      udf8: ''
+                      udf9: ''
+                      udf10: ''
+                    customer_data:
+                      email_id: joe.sam@gmail.com
+                      first_name: joe sam
+                      last_name: ''
+                      customer_id: '786'
+                      mobile_no: '9582492892'
+                      billing_data:
+                        address1: HNo 15 Sector 17
+                        address2: ''
+                        address3: ''
+                        pincode: '144005'
+                        city: CHANDIGARH
+                        state: PUNJAB
+                        country: INDIA
+                      shipping_data:
+                        address1: HNo 15 Sector 17
+                        address2: ''
+                        address3: ''
+                        pincode: '144005'
+                        city: CHANDIGARH
+                        state: PUNJAB
+                        country: INDIA
+          headers:
+            X-VERIFY:
+              schema:
+                type: string
+              description: This is SHA256(StringifyJson(response)).This is used to do HMAC Validation of response
+            X-RESPONSE-SEND-TIMESTAMP:
+              schema:
+                type: integer
+              description: response timestamp when plural send the response back to merchant
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                Bad Request:
+                  value:
+                    error_code: XXX
+                    error_message: INVALID_DATA
+          headers:
+            X-VERIFY:
+              schema:
+                type: string
+              description: This is SHA256(StringifyJson(response)).This is used to do HMAC Validation of response
+            X-RESPONSE-SEND-TIMESTAMP:
+              schema:
+                type: integer
+              description: response timestamp when plural send the response back to merchant
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+        '422':
+          description: Unprocessable Entity (WebDAV)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                Acquirer Processing Failed:
+                  value:
+                    error_code: XXX
+                    error_message: ACQUIRER PROCESSING FAILED
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                Internal Server Error:
+                  value:
+                    error_code: XXX
+                    error_message: INTERNAL_SERVER_ERROR
+          headers:
+            X-VERIFY:
+              schema:
+                type: string
+              description: This is SHA256(StringifyJson(response)).This is used to do HMAC Validation of response
+            X-RESPONSE-SEND-TIMESTAMP:
+              schema:
+                type: integer
+              description: response timestamp when plural send the response back to merchant
+      description: This API is to fetch all the payment details against the plural transaction id or merchant reference id send in any sale/refund/void api
+      security:
+        - Edge-Auth: []
+      parameters:
+        - schema:
+            type: string
+          in: header
+          name: X-VERIFY
+          required: true
+          description: This is SHA256(StringifyJson(request)).This is used to do HMAC Validation  of request
+        - schema:
+            type: integer
+          in: header
+          name: X-REQUESTED-TIMESTAMP
+          description: api request time stamp initiation at merchant side
+        - schema:
+            type: string
+          in: header
+          name: X-CLIENT-ID
+          description: Applicable if merchant is assigned with client id
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/FetchPaymentTransactionDetails'
+            examples:
+              Fetch Payment Details On Unique Reference Id:
+                value:
+                  merchant_data:
+                    id: '106589'
+                    unique_reference_id: TEST-ORDER-786
+                  transaction_data:
+                    plural_transaction_id: '0'
+              Fetch Payment Details On Plural Transaction Id:
+                value:
+                  merchant_data:
+                    id: '106589'
+                    unique_reference_id: TEST-ORDER-786
+                  transaction_data:
+                    plural_transaction_id: '78612345'
+        description: This is the api to fetch all payment details for any sale/refund/void transaction
+      tags:
+        - POST-PAYMENT
+components:
+  schemas:
+    Order:
+      title: Order
+      type: object
+      properties:
+        merchant_data:
+          $ref: '#/components/schemas/MerchantData'
+        payment_data:
+          $ref: '#/components/schemas/PaymentData'
+        product_details:
+          $ref: '#/components/schemas/ProductDetails'
+        customer_data:
+          $ref: '#/components/schemas/CustomerData'
+        additional_data:
+          $ref: '#/components/schemas/AdditionalData'
+        checkout_data:
+          $ref: '#/components/schemas/CheckoutData'
+      required:
+        - merchant_data
+        - payment_data
+      description: This is the schema for Order Initiation
+      x-examples:
+        Order Data:
+          merchant_data:
+            id: '106589'
+            unique_reference_id: TEST-ORDER-786
+          payment_data:
+            payment_amount:
+              amount: 50000
+              currency: INR
+          product_details:
+            - product_code: SM-G950FZKDINS
+              product_amount:
+                amount: 50000
+                currency: INR
+          customer_data:
+            email_id: joe.sam@gmail.com
+            first_name: joe sam
+            last_name: string
+            customer_id: string
+            mobile_no: stringstr
+            billing_data:
+              address1: string
+              address2: string
+              address3: string
+              pincode: '144005'
+              city: CHANDIGARH
+              state: PUNJAB
+              country: INDIA
+            shipping_data:
+              address1: string
+              address2: string
+              address3: string
+              pincode: string
+              city: CHANDIGARH
+              state: PUNJAB
+              country: INDIA
+          additional_data:
+            udf1: string
+            udf2: string
+            udf3: string
+            udf4: string
+            udf5: string
+            udf6: string
+            udf7: string
+            udf8: string
+            udf9: string
+            udf10: string
+          checkout_data:
+            enabled_payment_mode_list:
+              - mode: NONE
+                channel:
+                  - COLLECT
+    MerchantData:
+      title: MerchantData
+      type: object
+      properties:
+        id:
+          type: string
+          maxLength: 50
+          minLength: 1
+          example: '106589'
+        unique_reference_id:
+          type: string
+          minLength: 1
+          maxLength: 50
+          example: TEST-ORDER-786
+      required:
+        - id
+        - unique_reference_id
+      description: This is the schema for merchant details during transaction
+      x-examples:
+        Merchant Data:
+          id: '106589'
+          unique_reference_id: TEST-ORDER-786
+    PaymentData:
+      title: PaymentData
+      type: object
+      properties:
+        payment_amount:
+          $ref: '#/components/schemas/Amount'
+      required:
+        - payment_amount
+      description: This is scehma for payment data
+      x-examples:
+        Payment Amount:
+          payment_amount:
+            amount: 50000
+            currency: INR
+    Amount:
+      title: Amount
+      type: object
+      description: This is schema for amount data
+      x-examples:
+        Currency Data:
+          amount: 50000
+          currency: INR
+        Example 1:
+          amount: 50000
+          currency: INR
+      properties:
+        amount:
+          type: number
+          example: '50000.00'
+          format: double
+          minimum: 1
+          maximum: 999999999
+        currency:
+          type: string
+          example: INR
+          default: INR
+          enum:
+            - INR
+            - JPY
+            - CNY
+            - SDG
+            - RON
+            - MKD
+            - MXN
+            - CAD
+            - ZAR
+            - AUD
+            - NOK
+            - ILS
+            - ISK
+            - SYP
+            - LYD
+            - UYU
+            - YER
+            - CSD
+            - EEK
+            - THB
+            - IDR
+            - LBP
+            - AED
+            - BOB
+            - QAR
+            - BHD
+            - HNL
+            - HRK
+            - COP
+            - ALL
+            - DKK
+            - MYR
+            - SEK
+            - RSD
+            - BGN
+            - DOP
+            - KRW
+            - LVL
+            - VEF
+            - CZK
+            - TND
+            - KWD
+            - VND
+            - JOD
+            - NZD
+            - PAB
+            - CLP
+            - PEN
+            - GBP
+            - DZD
+            - CHF
+            - RUB
+            - UAH
+            - ARS
+            - SAR
+            - EGP
+            - PYG
+            - TWD
+            - TRY
+            - BAM
+            - OMR
+            - SGD
+            - MAD
+            - BYR
+            - NIO
+            - HKD
+            - LTL
+            - SKK
+            - GTQ
+            - BRL
+            - EUR
+            - HUF
+            - IQD
+            - CRC
+            - PHP
+            - SVC
+            - PLN
+            - USD
+      required:
+        - amount
+        - currency
+    ProductDetails:
+      title: ProductDetails
+      type: array
+      items:
+        $ref: '#/components/schemas/Product'
+      description: This is schema for product details used in affordibility
+      x-examples:
+        Array of Product Details:
+          - product_code: SM-G950FZKDINS
+            product_amount:
+              amount: 50000
+              currency: INR
+    Product:
+      title: Product
+      type: object
+      description: This is schema for product
+      properties:
+        product_code:
+          type: string
+          minLength: 1
+          maxLength: 50
+          example: SM-G950FZKDINS
+        product_amount:
+          $ref: '#/components/schemas/Amount'
+      required:
+        - product_code
+        - product_amount
+      x-examples:
+        Product Data:
+          product_code: SM-G950FZKDINS
+          product_amount:
+            amount: 50000
+            currency: INR
+    CustomerData:
+      type: object
+      x-examples:
+        Customer Data:
+          email_id: ''
+          first_name: ''
+          last_name: ''
+          customer_id: ''
+          mobile_no: ''
+          billing_data:
+            address1: ''
+            address2: ''
+            address3: ''
+            pincode: ''
+            city: ''
+            state: ''
+            country: ''
+          shipping_data:
+            address1: ''
+            address2: ''
+            address3: ''
+            pincode: ''
+            city: ''
+            state: ''
+            country: ''
+      description: This is schema for customer related details
+      properties:
+        email_id:
+          type: string
+          example: joe.sam@gmail.com
+          format: email
+        first_name:
+          type: string
+          example: joe sam
+          maxLength: 50
+          minLength: 0
+        last_name:
+          type: string
+          minLength: 0
+          maxLength: 50
+        customer_id:
+          type: string
+        mobile_no:
+          type: string
+          minLength: 9
+          maxLength: 20
+        billing_data:
+          type: object
+          properties:
+            address1:
+              type: string
+              maxLength: 100
+            address2:
+              type: string
+              maxLength: 100
+            address3:
+              type: string
+              maxLength: 100
+            pincode:
+              type: string
+              maxLength: 10
+              example: '144005'
+            city:
+              type: string
+              example: CHANDIGARH
+              maxLength: 50
+            state:
+              type: string
+              example: PUNJAB
+              maxLength: 50
+            country:
+              type: string
+              example: INDIA
+              maxLength: 50
+        shipping_data:
+          type: object
+          properties:
+            address1:
+              type: string
+              maxLength: 100
+            address2:
+              type: string
+              maxLength: 100
+            address3:
+              type: string
+              maxLength: 100
+            pincode:
+              type: string
+              maxLength: 10
+            city:
+              type: string
+              maxLength: 50
+              example: CHANDIGARH
+            state:
+              type: string
+              maxLength: 50
+              example: PUNJAB
+            country:
+              type: string
+              example: INDIA
+              maxLength: 50
+      title: CustomerData
+    AdditionalData:
+      title: AdditionalData
+      type: object
+      properties:
+        udf1:
+          type: string
+          maxLength: 100
+        udf2:
+          type: string
+          maxLength: 100
+        udf3:
+          type: string
+          maxLength: 100
+        udf4:
+          type: string
+          maxLength: 100
+        udf5:
+          type: string
+          maxLength: 100
+        udf6:
+          type: string
+          maxLength: 100
+        udf7:
+          type: string
+          maxLength: 100
+        udf8:
+          type: string
+          maxLength: 100
+        udf9:
+          type: string
+          maxLength: 100
+        udf10:
+          type: string
+          maxLength: 100
+      description: This is schema for additional data that can be used in future
+      x-examples:
+        Additional data:
+          udf1: string
+          udf2: string
+          udf3: string
+          udf4: string
+          udf5: string
+          udf6: string
+          udf7: string
+          udf8: string
+          udf9: string
+          udf10: string
+    OrderResponse:
+      title: OrderResponse
+      type: object
+      description: This is response schema of order initiation
+      x-examples:
+        Order Response:
+          token: string
+          _links:
+            checkout_url:
+              href: string
+      properties:
+        token:
+          type: string
+        _links:
+          $ref: '#/components/schemas/OrderHateoasLink'
+      required:
+        - token
+        - _links
+    Error:
+      title: Error
+      type: object
+      description: This is the Error Schema for all the API's
+      x-examples:
+        Error Schema:
+          error_code: string
+          error_message: string
+        Error with additional details:
+          error_code: '-40'
+          error_message: INVALID_DATA
+          errors:
+            - 'merchantData.id:size must be between 1 and 50'
+            - 'merchantData.uniqueReferenceId:size must be between 1 and 50'
+      properties:
+        error_code:
+          type: string
+        error_message:
+          type: string
+        errors:
+          type: array
+          items:
+            type: string
+      required:
+        - error_code
+        - error_message
+    PaymentModedata:
+      title: PaymentModedata
+      type: object
+      description: This is schema for payment mode data
+      x-examples:
+        Payment Mode Data:
+          mode: UPI
+          channel:
+            - COLLECT
+      properties:
+        mode:
+          type: string
+          enum:
+            - NONE
+            - CREDIT_DEBIT
+            - NET_BANKING
+            - EMI
+            - UPI
+            - WALLET
+            - DEBIT_EMI
+            - BUY_NOW_PAY_LATER
+            - CARDLESS
+            - PAYBYPOINTS
+        channel:
+          type: array
+          items:
+            type: string
+            enum:
+              - COLLECT
+              - INTENT
+              - NONE
+              - CREDIT_CARD_ONLY
+              - DEBIT_CARD_ONLY
+            default: NONE
+      required:
+        - mode
+    CheckoutData:
+      title: CheckoutData
+      type: object
+      description: This is schema for checkout data used in order initiation
+      x-examples:
+        Enabled Payment Mode List:
+          enabled_payment_mode_list:
+            - mode: UPI
+              channel:
+                - COLLECT
+      properties:
+        enabled_payment_mode_list:
+          type: array
+          items:
+            $ref: '#/components/schemas/PaymentModedata'
+      required:
+        - enabled_payment_mode_list
+    OrderHateoasLink:
+      type: object
+      x-examples:
+        Example 1:
+          checkout_url:
+            href: 'https://pinepg.in/v3/gateway/payment/Tbb29a5H8UtdD7aO1GGpRZ4rgtkKvcUjFb2bBVGjBsoI3d/checkout'
+          card_purchase_payment_processing_url:
+            href: 'https://pinepg.in/v3/gateway/payments/Tbb29a5H8UtdD7aO1GGpRZ4rgtkKvcUjFb2bBVGjBsoI3sd/purchase'
+          emi_purchase_payment_processing_url:
+            href: 'https://pinepg.in/v3/gateway/payments/Tbb29a5H8UtdD7aO1GGpRZ4rgtkKvcUjFb2bBVGjBsoI3sd/purchase'
+          wallet_purchase_payment_processing_url:
+            href: 'https://pinepg.in/v3/gateway/payments/Tbb29a5H8UtdD7aO1GGpRZ4rgtkKvcUjFb2bBVGjBsoI3sd/purchase'
+          upi_purchase_payment_processing_url:
+            href: 'https://pinepg.in/v3/gateway/payments/Tbb29a5H8UtdD7aO1GGpRZ4rgtkKvcUjFb2bBVGjBsoI3sd/purchase'
+          netbanking_purchase_payment_processing_url:
+            href: 'https://pinepg.in/v3/gateway/payments/Tbb29a5H8UtdD7aO1GGpRZ4rgtkKvcUjFb2bBVGjBsoI3sd/purchase'
+          card_preauth_payment_processing_url:
+            href: 'https://pinepg.in/v3/gateway/payments/Tbb29a5H8UtdD7aO1GGpRZ4rgtkKvcUjFb2bBVGjBsoI3sd/authorize'
+          emi_preauth_payment_processing_url:
+            href: 'https://pinepg.in/v3/gateway/payments/Tbb29a5H8UtdD7aO1GGpRZ4rgtkKvcUjFb2bBVGjBsoI3sd/authorize'
+          fetch_payment_data_url:
+            href: 'https://pinepg.in/v3/gateway/fetch-payment-transaction/'
+      title: OrderHateosLink
+      description: This model contains all the href link
+      properties:
+        checkout_url:
+          $ref: '#/components/schemas/HateosLink'
+        fetch_payment_data_url:
+          $ref: '#/components/schemas/HateosLink'
+        card_purchase_payment_processing_url:
+          $ref: '#/components/schemas/HateosLink'
+        emi_purchase_payment_processing_url:
+          $ref: '#/components/schemas/HateosLink'
+        wallet_purchase_payment_processing_url:
+          $ref: '#/components/schemas/HateosLink'
+        netbanking_purchase_payment_processing_url:
+          $ref: '#/components/schemas/HateosLink'
+        upi_purchase_payment_processing_url:
+          $ref: '#/components/schemas/HateosLink'
+        card_preauth_payment_processing_url:
+          $ref: '#/components/schemas/HateosLink'
+        emi_preauth_payment_processing_url:
+          $ref: '#/components/schemas/HateosLink'
+    HateosLink:
+      title: HateosLink
+      type: object
+      properties:
+        href:
+          type: string
+      required:
+        - href
+      description: This is schema for Hateos link
+      x-examples:
+        Hateos Link:
+          href: string
+    CardData:
+      type: object
+      x-examples:
+        Card Data:
+          card_number: '4012001037141112'
+          card_expiry_year: '2023'
+          card_expiry_month: '12'
+          card_holder_ name: harsh
+          cvv: '123'
+      title: CardData
+      description: This is schema for Card payment
+      properties:
+        card_number:
+          type: string
+          minLength: 12
+          maxLength: 23
+          example: '4012001037141112'
+        cvv:
+          type: string
+          maxLength: 4
+          example: '123'
+        expiry_month:
+          type: string
+          minLength: 2
+          maxLength: 2
+          example: '09'
+        expiry_year:
+          type: string
+          example: '2025'
+          minLength: 4
+          maxLength: 4
+      required:
+        - card_number
+        - cvv
+        - expiry_month
+        - expiry_year
+    PaymentAPIResponse:
+      type: object
+      x-examples:
+        Payment API Response:
+          token: ubrjAgbVaJVrGz67y%2fZCjCveYWNymE7ULAlOO7FCbz4%3d
+          redirect_url: 'http://pinepg.in/v3/gateway/payment/{token}/checkout '
+      title: PaymentAPIResponse
+      properties:
+        token:
+          type: string
+          example: Tbb29a5H8UtdD7aO1GGpRZ4rgtkKvcUjFb2bBVGjBsoI3d
+        redirect_url:
+          type: string
+          example: 'http://pinepg.in/v3/gateway/payment/{token}/redirect/bank'
+      required:
+        - token
+        - redirect_url
+      description: This is the response schema of payment api
+    PaymentConfiguration:
+      type: object
+      x-examples:
+        Payment Configuration:
+          auth_blocking_time_in_sec: '3600'
+          is_native_otp_flow: 0
+      description: This is the schema of payment configuration
+      title: PaymentConfiguration
+      properties:
+        auth_blocking_time_in_sec:
+          type: integer
+          format: int64
+          default: 432000
+          maximum: 432000
+          minimum: 1
+        is_native_otp_flow:
+          type: integer
+          example: 1
+          default: 0
+      required:
+        - auth_blocking_time_in_sec
+    AuthRequest:
+      title: AuthRequest
+      type: object
+      description: This is schema of auth request
+      properties:
+        payment_method:
+          $ref: '#/components/schemas/PaymentMethod'
+        card_data:
+          $ref: '#/components/schemas/CardData'
+        token_data:
+          $ref: '#/components/schemas/TokenData'
+        payment_configuration:
+          $ref: '#/components/schemas/PaymentConfiguration'
+      required:
+        - payment_method
+        - payment_configuration
+      x-examples:
+        Auth Request:
+          payment_method:
+            type: CREDIT_DEBIT
+            is_tokenized_transaction: 0
+          card_data:
+            card_number: '4012001037141112'
+            cvv: '123'
+            expiry_month: '09'
+            expiry_year: '2025'
+          token_data:
+            token: string
+            expiry_month: '09'
+            expiry_year: '2025'
+            cryptogram: string
+            cvv: '123'
+            last4Digit: '1114'
+            par: string
+            name: string
+          payment_configuration:
+            auth_blocking_time_in_sec: 432000
+            is_native_otp_flow: 1
+    CompletePaymentResponse:
+      title: CompletePaymentResponse
+      type: object
+      description: This is response schema of any transactional api
+      properties:
+        merchant_data:
+          $ref: '#/components/schemas/MerchantData'
+        payment_data:
+          $ref: '#/components/schemas/CompletePaymentData'
+        transaction_data:
+          type: object
+          required:
+            - transaction_info"
+          properties:
+            transaction_info":
+              type: array
+              items:
+                $ref: '#/components/schemas/CompleteTransactionData'
+        additional_data:
+          $ref: '#/components/schemas/AdditionalData'
+        customer_data:
+          $ref: '#/components/schemas/CustomerData'
+      required:
+        - merchant_data
+        - payment_data
+        - transaction_data
+        - additional_data
+        - customer_data
+      x-examples:
+        Complete payment response:
+          merchant_data:
+            id: '106589'
+            unique_reference_id: TEST-ORDER-786
+          payment_data:
+            payment_amount:
+              amount: 50000
+              currency: INR
+            authorized_amount:
+              amount: 50000
+              currency: INR
+            captured_amount:
+              amount: 50000
+              currency: INR
+            convenience_fees_amount:
+              amount: 50000
+              currency: INR
+            convenience_fees_gst_amount:
+              amount: 50000
+              currency: INR
+            convenience_fees_additional_amount:
+              amount: 50000
+              currency: INR
+            refunded_amount:
+              amount: 50000
+              currency: INR
+            max_amount_can_be_refunded:
+              amount: 50000
+              currency: INR
+          transaction_data:
+            transaction_info":
+              - plural_transaction_id: string
+                payment_mode: NONE
+                is_surcharge_txn: 0
+                transaction_status: FAILURE
+                completion_date_time: string
+                response_code: string
+                response_msg: string
+                acquirer_data:
+                  response_code: string
+                  response_message: string
+                  name: string
+                  rrn: string
+                  arn: string
+                  auth_id: string
+                  reference_id: string
+                  auth_code: string
+                card_data:
+                  card_holder_name: string
+                  salted_card_hash: string
+                  masked_card_number: string
+                  issuer_name: string
+                  is_tokenized_transaction: 1
+                netbanking_data:
+                  bank_acoount_number: string
+                  bank_name: string
+                wallet_data:
+                  wallet_name: string
+                upi_data:
+                  vpa: string
+                  channel: string
+                emi_data:
+                  channel: string
+                  emi_model_type: SINGLE_CART
+                  offer_scheme:
+                    product_details:
+                      - product_code: string
+                        product_amount:
+                          amount: 0
+                          currency: string
+                        pine_product_code: string
+                        product_display_name: string
+                        subvention_type: NONE
+                        cashback_type: NONE
+                        total_subvention_cashback_discount:
+                          amount: 0
+                          currency: string
+                        total_product_discount:
+                          amount: 0
+                          currency: string
+                        issuer_subvention_cashback_discount:
+                          amount: 0
+                          currency: string
+                        issuer_product_discount:
+                          amount: 0
+                          currency: string
+                        merchant_subvention_cashback_discount:
+                          amount: 0
+                          currency: string
+                        merchant_product_discount:
+                          amount: 0
+                          currency: string
+                        oem_subvention_cashback_discount:
+                          amount: 0
+                          currency: string
+                        oem_product_discount:
+                          amount: 0
+                          currency: string
+                        oem_subvention_cashback_discount_percentage: 0
+                        oem_product_discount_percentage: 0
+                        network_subvention_cashback_discount_percentage: 0
+                        network_product_discount_percentage: 0
+                        merchant_subvention_cashback_discount_percentage: 0
+                        merchant_product_discount_percentage: 0
+                        issuer_subvention_cashback_discount_percentage: 0
+                        issuer_product_discount_percentage: 0
+                        bank_interest_rate_percentage: 0
+                        bank_interest_amount: 0
+                        additional_cashback: string
+                        is_icb: 0
+                        schemes: {}
+                    emi_scheme:
+                      scheme_id: '123456'
+                      program_type: BRAND_EMI/BRAND_SUBVENTION_EMI/BRAND_OFF_US_INSTANT_DISCOUNT
+                      is_scheme_valid: true
+                  tenure_id: string
+                  tenure_in_month: string
+                  monthly_installment:
+                    amount: 0
+                    currency: string
+                  bank_interest_rate: 0
+                  interest_pay_to_bank:
+                    amount: 0
+                    currency: string
+                  total_offerred_discount_cashback_amount:
+                    amount: 0
+                    currency: string
+                  loan_amount:
+                    amount: 0
+                    currency: string
+                  auth_amount:
+                    amount: 0
+                    currency: string
+                  card_holder_name: string
+                  salted_card_hash: string
+                  masked_card_number: string
+                  issuer_name: string
+                  mobile_no: string
+                subscription_data: {}
+                txn_additional_info: string
+                additional_data:
+                  udf1: string
+                  udf2: string
+                  udf3: string
+                  udf4: string
+                  udf5: string
+                  udf6: string
+                  udf7: string
+                  udf8: string
+                  udf9: string
+                  udf10: string
+          additional_data:
+            udf1: string
+            udf2: string
+            udf3: string
+            udf4: string
+            udf5: string
+            udf6: string
+            udf7: string
+            udf8: string
+            udf9: string
+            udf10: string
+          customer_data:
+            email_id: joe.sam@gmail.com
+            first_name: joe sam
+            last_name: string
+            customer_id: string
+            mobile_no: stringstr
+            billing_data:
+              address1: string
+              address2: string
+              address3: string
+              pincode: '144005'
+              city: CHANDIGARH
+              state: PUNJAB
+              country: INDIA
+            shipping_data:
+              address1: string
+              address2: string
+              address3: string
+              pincode: string
+              city: CHANDIGARH
+              state: PUNJAB
+              country: INDIA
+    CompletePaymentData:
+      title: CompletePaymentData
+      type: object
+      description: This is schema of full payment details
+      properties:
+        payment_amount:
+          $ref: '#/components/schemas/Amount'
+        authorized_amount:
+          $ref: '#/components/schemas/Amount'
+        captured_amount:
+          $ref: '#/components/schemas/Amount'
+        convenience_fees_amount:
+          $ref: '#/components/schemas/Amount'
+        convenience_fees_gst_amount:
+          $ref: '#/components/schemas/Amount'
+        convenience_fees_additional_amount:
+          $ref: '#/components/schemas/Amount'
+        refunded_amount:
+          $ref: '#/components/schemas/Amount'
+        max_amount_can_be_refunded:
+          $ref: '#/components/schemas/Amount'
+      required:
+        - authorized_amount
+        - captured_amount
+        - convenience_fees_amount
+        - convenience_fees_gst_amount
+        - convenience_fees_additional_amount
+        - refunded_amount
+        - max_amount_can_be_refunded
+      x-examples:
+        Complete payment data:
+          payment_amount:
+            amount: 50000
+            currency: INR
+          authorized_amount:
+            amount: 50000
+            currency: INR
+          captured_amount:
+            amount: 50000
+            currency: INR
+          convenience_fees_amount:
+            amount: 50000
+            currency: INR
+          convenience_fees_gst_amount:
+            amount: 50000
+            currency: INR
+          convenience_fees_additional_amount:
+            amount: 50000
+            currency: INR
+          refunded_amount:
+            amount: 50000
+            currency: INR
+          max_amount_can_be_refunded:
+            amount: 50000
+            currency: INR
+    CompleteTransactionData:
+      type: object
+      x-examples:
+        Complete transaction data:
+          plural_transaction_id: '78612345'
+          payment_mode: CREDIT_DEBIT
+          is_surcharge_txn: ''
+          transaction_status: CAPTURED
+          completion_date_time: '01/04/2023 02:19:11 PM'
+          response_code: '1'
+          response_msg: SUCCESS
+          customer_data:
+            mobile_no: '9582492891'
+            email_id: ''
+            first_name: ''
+            last_name: ''
+            customer_id: ''
+          acquirer_data:
+            response_code: '00'
+            response_message: APPROVED
+            name: CYBERSOURCE
+            rrn: '3234284284993'
+            auth_id: '123456'
+            reference_id: '98443894934345'
+            auth_code: '123456'
+          card_data:
+            card_holder_name: Harsh
+            salted_card_hash: ' AW434FMFDJNFJIHRNBRHRNDJDNDKLDLEDBB2323'
+            masked_card_number: ' XXXXXXXXXXXXX1112'
+            issuer_name: HDFC
+          netbanking_data:
+            bank_acoount_number: XXXXXXXXXXXXX1112
+            bank_name: HDFC
+          wallet_data:
+            wallet_name: PAYTM
+          upi_data:
+            vpa: ''
+            channel: INTENT
+          emi_data:
+            channel: CREDIT
+            subvention_type: NO_COST_EMI
+            card_holder_name: harsh
+            salted_card_hash: AW434FMFDJNFJIHRNBRHRNDJDNDKLDLEDBB2323
+            masked_card_number: XXXXXXXXXXXX1112
+            issuer_name: HDFC
+            program_type: 'BANK_EMI,BRAND_EMI'
+            product_category: PHONE
+            product_description: IPHONE 10 PRO
+            manufacturer: APPLE
+            product_discount:
+              amount: 102218
+              currency: INR
+            tenure_month: '3'
+            interest_rate_percent: '150000'
+            processing_fee: '100'
+            principal_amount:
+              amount: 102218
+              currency: INR
+            amount_payable_each_month:
+              amount: 102218
+              currency: INR
+            product_code: '786'
+            product_display_name: Test-Prooduct
+            is_bank_emi_txn: '1'
+            is_brand_emi_txn: '1'
+            cashback_type: '3'
+            issuer_discount_cashabck_perecent: '0'
+            issuer_discount_cashback_fixed_amount:
+              amount: 102218
+              currency: INR
+            merchant_discount_cashabck_perecent: '0'
+            merchant_discount_cashback_fixed_amount:
+              amount: 102218
+              currency: INR
+            ' total_discount_cashback_percent': '65000'
+            total_discount_cashback_fixed_amount:
+              amount: 102218
+              currency: INR
+            total_discount_cashabck_amount:
+              amount: 102218
+              currency: INR
+            additional_cashback: ''
+            addon_instant_discount_amount:
+              amount: 102218
+              currency: INR
+          subscription_data: {}
+          txn_additional_info: ''
+          additional_data:
+            udf_field_1: ''
+            udf_field_2: ''
+            udf_field_3: ''
+            udf_field_4: ''
+            udf_field_5: ''
+            udf_field_6: ''
+            udf_field_7: ''
+            udf_field_8: ''
+            udf_field_9: ''
+            udf_field_10: ''
+      title: CompleteTransactionData
+      description: This is response schema of complete transaction details
+      properties:
+        plural_transaction_id:
+          type: string
+        payment_mode:
+          type: string
+          enum:
+            - NONE
+            - CREDIT_DEBIT
+            - NET_BANKING
+            - EMI
+            - UPI
+            - WALLET
+            - DEBIT_EMI
+            - BUY_NOW_PAY_LATER
+            - CARDLESS
+            - PAYBYPOINTS
+        is_surcharge_txn:
+          type: integer
+        transaction_status:
+          type: string
+          enum:
+            - FAILURE
+            - REJECTED
+            - INITIATED
+            - AUTH_COMPLETE
+            - CAPTURED
+            - REFUNDED
+            - PARTIALLY_CAPTURED
+            - PARTIALLY_REFUNDED
+            - REFUND_INITIATED
+            - PENDING
+            - AUTO_REVERSED
+            - DROP
+            - VOIDED
+        completion_date_time:
+          type: string
+        response_code:
+          type: string
+        response_msg:
+          type: string
+        acquirer_data:
+          $ref: '#/components/schemas/AcquirerData'
+        card_data:
+          type: object
+          properties:
+            card_holder_name:
+              type: string
+            salted_card_hash:
+              type: string
+            masked_card_number:
+              type: string
+            issuer_name:
+              type: string
+            is_tokenized_transaction:
+              type: integer
+              default: 0
+              example: 1
+              minimum: 0
+              maximum: 1
+          required:
+            - card_holder_name
+            - masked_card_number
+        netbanking_data:
+          type: object
+          properties:
+            bank_acoount_number:
+              type: string
+            bank_name:
+              type: string
+          required:
+            - bank_name
+        wallet_data:
+          type: object
+          properties:
+            wallet_name:
+              type: string
+          required:
+            - wallet_name
+        upi_data:
+          type: object
+          properties:
+            vpa:
+              type: string
+            channel:
+              type: string
+          required:
+            - vpa
+            - channel
+        emi_data:
+          $ref: '#/components/schemas/EMIData'
+        subscription_data:
+          type: object
+        txn_additional_info:
+          type: string
+        additional_data:
+          $ref: '#/components/schemas/AdditionalData'
+      required:
+        - plural_transaction_id
+        - payment_mode
+        - is_surcharge_txn
+        - transaction_status
+        - completion_date_time
+        - response_code
+        - response_msg
+    AcquirerData:
+      type: object
+      x-examples:
+        Acquirer Data:
+          response_code: '00'
+          response_message: APPROVED
+          name: CYBERSOURCE_HDFC
+          rrn: '3234284284993'
+          arn: ''
+          auth_id: '123456'
+          reference_id: '98443894934345'
+          auth_code: '123456'
+      title: AcquirerData
+      description: This is schema of acquirer details
+      properties:
+        response_code:
+          type: string
+        response_message:
+          type: string
+        name:
+          type: string
+        rrn:
+          type: string
+        arn:
+          type: string
+        auth_id:
+          type: string
+        reference_id:
+          type: string
+        auth_code:
+          type: string
+      required:
+        - response_code
+        - response_message
+        - name
+    IssuerData:
+      type: object
+      properties:
+        cavv:
+          type: string
+        eci_raw:
+          type: string
+        cavv_algo:
+          type: string
+        pares_status:
+          type: string
+        pares:
+          type: string
+        veres_enrolled:
+          type: string
+      x-examples:
+        Example 1:
+          cavv: ''
+          eci_raw: ''
+          cavv_algo: ''
+          pares_status: ''
+          pares: ''
+          veres_enrolled: ''
+      description: This is schema of issuer details
+      title: IssuerData
+    EMIData:
+      type: object
+      x-examples:
+        EMI Data:
+          channel: CREDIT
+          emi_model_type: SINGLE_CART
+          offer_scheme:
+            product_details:
+              - schemes:
+                  - scheme_id: 217579
+                    program_type: BRAND_EMI
+                    is_scheme_valid: true
+                product_code: '267022'
+                product_amount:
+                  amount: 5000000
+                  currency: INR
+                pine_product_code: 786ABC
+                product_display_name: Iphone
+                subvention_type: STANDARD_EMI
+                cashback_type: NONE
+                total_subvention_cashback_discount:
+                  amount: 0
+                  currency: INR
+                total_product_discount:
+                  amount: 0
+                  currency: INR
+                issuer_subvention_cashback_discount:
+                  amount: 0
+                  currency: INR
+                issuer_product_discount:
+                  amount: 0
+                  currency: INR
+                merchant_subvention_cashback_discount:
+                  amount: 0
+                  currency: INR
+                merchant_product_discount:
+                  amount: 0
+                  currency: INR
+                oem_subvention_cashback_discount:
+                  amount: 0
+                  currency: INR
+                oem_product_discount:
+                  amount: 0
+                  currency: INR
+                oem_subvention_cashback_discount_percentage: 0
+                oem_product_discount_percentage: 0
+                network_subvention_cashback_discount_percentage: 0
+                network_product_discount_percentage: 0
+                merchant_subvention_cashback_discount_percentage: 0
+                merchant_product_discount_percentage: 0
+                issuer_subvention_cashback_discount_percentage: 0
+                issuer_product_discount_percentage: 0
+                bank_interest_rate_percentage: 200000
+                bank_interest_amount: 295666
+                additional_cashback: ''
+                is_icb: 0
+            emi_scheme: null
+          tenure_id: '6'
+          tenure_in_month: '6'
+          monthly_installment:
+            amount: 882611
+            currency: INR
+          bank_interest_rate: 200000
+          interest_pay_to_bank:
+            amount: 295666
+            currency: INR
+          total_offerred_discount_cashback_amount:
+            amount: 0
+            currency: INR
+          loan_amount:
+            amount: 5000000
+            currency: INR
+          auth_amount:
+            amount: 5000000
+            currency: INR
+          card_holder_name: harsh
+          salted_card_hash: AW434FMFDJNFJIHRNBRHRNDJDNDKLDLEDBB2323
+          masked_card_number: XXXXXXXXXXXX1112
+          issuer_name: HDFC
+          mobile_no: '9582492891'
+      title: EMIData
+      description: This is schema of emi/affordibility details
+      properties:
+        channel:
+          type: string
+          enum:
+            - CREDIT
+            - DEBIT
+            - CARDLESS
+        emi_model_type:
+          type: string
+          enum:
+            - SINGLE_CART
+            - MULTI_CART
+        offer_scheme:
+          type: object
+          properties:
+            product_details:
+              type: array
+              items:
+                $ref: '#/components/schemas/EMIProductDetails'
+            emi_scheme:
+              $ref: '#/components/schemas/EMISchemeData'
+        tenure_id:
+          type: string
+        tenure_in_month:
+          type: string
+        monthly_installment:
+          type: object
+          properties:
+            amount:
+              type: integer
+            currency:
+              type: string
+        bank_interest_rate:
+          type: integer
+        interest_pay_to_bank:
+          type: object
+          properties:
+            amount:
+              type: integer
+            currency:
+              type: string
+        total_offerred_discount_cashback_amount:
+          type: object
+          properties:
+            amount:
+              type: integer
+            currency:
+              type: string
+        loan_amount:
+          type: object
+          properties:
+            amount:
+              type: integer
+            currency:
+              type: string
+        auth_amount:
+          type: object
+          properties:
+            amount:
+              type: integer
+            currency:
+              type: string
+        card_holder_name:
+          type: string
+        salted_card_hash:
+          type: string
+        masked_card_number:
+          type: string
+        issuer_name:
+          type: string
+        mobile_no:
+          type: string
+      required:
+        - channel
+        - emi_model_type
+        - tenure_id
+        - tenure_in_month
+        - monthly_installment
+        - bank_interest_rate
+        - interest_pay_to_bank
+        - total_offerred_discount_cashback_amount
+        - loan_amount
+        - auth_amount
+        - card_holder_name
+        - masked_card_number
+        - issuer_name
+    EMISchemeData:
+      type: object
+      x-examples:
+        EMI Scheme Data:
+          scheme_id: 158006
+          program_type: BANK_EMI
+          is_scheme_valid: true
+      description: This is schema of emi scheme details
+      title: EMISchemeData
+      properties:
+        scheme_id:
+          type: string
+          example: '123456'
+        program_type:
+          type: string
+          example: BRAND_EMI
+          enum:
+            - BANK_EMI
+            - BRAND_EMI
+            - BRAND_OFF_US_INSTANT_DISCOUNT
+            - BRAND_SUBVENTION_DISCOUNT
+        is_scheme_valid:
+          type: boolean
+      required:
+        - scheme_id
+        - program_type
+    EMIProductDetails:
+      type: object
+      x-examples:
+        EMI Product Details:
+          product_code: '267022'
+          product_amount:
+            amount: 5000000
+            currency: INR
+          pine_product_code: 786ABC
+          product_display_name: Iphone
+          subvention_type: NONE
+          cashback_type: NONE
+          total_subvention_cashback_discount:
+            amount: 0
+            currency: INR
+          total_product_discount:
+            amount: 0
+            currency: INR
+          issuer_subvention_cashback_discount:
+            amount: 0
+            currency: INR
+          issuer_product_discount:
+            amount: 0
+            currency: INR
+          merchant_subvention_cashback_discount:
+            amount: 0
+            currency: INR
+          merchant_product_discount:
+            amount: 0
+            currency: INR
+          oem_subvention_cashback_discount:
+            amount: 0
+            currency: INR
+          oem_product_discount:
+            amount: 0
+            currency: INR
+          oem_subvention_cashback_discount_percentage: 0
+          oem_product_discount_percentage: 0
+          network_subvention_cashback_discount_percentage: 0
+          network_product_discount_percentage: 0
+          merchant_subvention_cashback_discount_percentage: 0
+          merchant_product_discount_percentage: 0
+          issuer_subvention_cashback_discount_percentage: 0
+          issuer_product_discount_percentage: 0
+          bank_interest_rate_percentage: 200000
+          bank_interest_amount: 295666
+          additional_cashback: ''
+          is_icb: 0
+      description: This is schema of emi product details
+      title: EMIProductDetails
+      properties:
+        product_code:
+          type: string
+        product_amount:
+          type: object
+          properties:
+            amount:
+              type: integer
+            currency:
+              type: string
+        pine_product_code:
+          type: string
+        product_display_name:
+          type: string
+        subvention_type:
+          type: string
+          enum:
+            - NONE
+            - NO_COST_EMI
+            - LOW_COST_EMI
+            - STANDARD_EMI
+          default: NONE
+        cashback_type:
+          type: string
+          enum:
+            - NONE
+            - PRE_CASHBACK
+            - POST_CASHBACK
+            - INSTANT_DISCOUNT
+          default: NONE
+        total_subvention_cashback_discount:
+          type: object
+          properties:
+            amount:
+              type: integer
+            currency:
+              type: string
+        total_product_discount:
+          type: object
+          properties:
+            amount:
+              type: integer
+            currency:
+              type: string
+        issuer_subvention_cashback_discount:
+          type: object
+          properties:
+            amount:
+              type: integer
+            currency:
+              type: string
+        issuer_product_discount:
+          type: object
+          properties:
+            amount:
+              type: integer
+            currency:
+              type: string
+        merchant_subvention_cashback_discount:
+          type: object
+          properties:
+            amount:
+              type: integer
+            currency:
+              type: string
+        merchant_product_discount:
+          type: object
+          properties:
+            amount:
+              type: integer
+            currency:
+              type: string
+        oem_subvention_cashback_discount:
+          type: object
+          properties:
+            amount:
+              type: integer
+            currency:
+              type: string
+        oem_product_discount:
+          type: object
+          properties:
+            amount:
+              type: integer
+            currency:
+              type: string
+        oem_subvention_cashback_discount_percentage:
+          type: integer
+        oem_product_discount_percentage:
+          type: integer
+        network_subvention_cashback_discount_percentage:
+          type: integer
+        network_product_discount_percentage:
+          type: integer
+        merchant_subvention_cashback_discount_percentage:
+          type: integer
+        merchant_product_discount_percentage:
+          type: integer
+        issuer_subvention_cashback_discount_percentage:
+          type: integer
+        issuer_product_discount_percentage:
+          type: integer
+        bank_interest_rate_percentage:
+          type: integer
+        bank_interest_amount:
+          type: integer
+        additional_cashback:
+          type: string
+        is_icb:
+          type: integer
+        schemes:
+          type: object
+      required:
+        - product_code
+        - product_amount
+        - subvention_type
+        - cashback_type
+        - total_subvention_cashback_discount
+        - total_product_discount
+        - issuer_subvention_cashback_discount
+        - issuer_product_discount
+        - merchant_subvention_cashback_discount
+        - merchant_product_discount
+        - oem_subvention_cashback_discount
+        - oem_product_discount
+        - oem_subvention_cashback_discount_percentage
+        - oem_product_discount_percentage
+        - network_subvention_cashback_discount_percentage
+        - network_product_discount_percentage
+        - merchant_subvention_cashback_discount_percentage
+        - merchant_product_discount_percentage
+        - issuer_subvention_cashback_discount_percentage
+        - issuer_product_discount_percentage
+        - bank_interest_rate_percentage
+        - bank_interest_amount
+        - additional_cashback
+        - is_icb
+        - schemes
+    VoidRequest:
+      title: VoidRequest
+      type: object
+      description: This is schema of pre auth void request
+      x-examples:
+        Void Request:
+          merchant_data:
+            id: '106589'
+            unique_reference_id: TEST-ORDER-786
+      properties:
+        merchant_data:
+          $ref: '#/components/schemas/MerchantData'
+      required:
+        - merchant_data
+    RefundRequest:
+      title: RefundRequest
+      type: object
+      description: This is schema of refund request
+      x-examples:
+        Refund Request:
+          merchant_data:
+            id: '106589'
+            unique_reference_id: TEST-ORDER-786
+          payment_data:
+            refund_amount:
+              amount: 50000
+              currency: INR
+      properties:
+        merchant_data:
+          $ref: '#/components/schemas/MerchantData'
+        payment_data:
+          type: object
+          required:
+            - refund_amount
+          properties:
+            refund_amount:
+              $ref: '#/components/schemas/Amount'
+      required:
+        - merchant_data
+        - payment_data
+    NetbankingData:
+      type: object
+      x-examples:
+        Example 1:
+          netbanking_data:
+            merchant_payment_code: NB1031
+      title: NetbankingData
+      description: This is scheme for netbanking payment
+      properties:
+        merchant_payment_code:
+          type: string
+      required:
+        - merchant_payment_code
+    WalletData:
+      type: object
+      x-examples:
+        Example 1:
+          wallet_data:
+            merchant_payment_code: phonepe
+      title: WalletData
+      description: This is schema for wallet payment
+      properties:
+        merchant_payment_code:
+          type: string
+      required:
+        - merchant_payment_code
+    UPIData:
+      type: object
+      x-examples:
+        Example 1:
+          upi_data:
+            vpa: 9582492891@ybl
+            channel: INTENT
+      title: UPIData
+      description: This schema is for UPI Payment
+      properties:
+        vpa:
+          type: string
+        channel:
+          type: string
+      required:
+        - vpa
+        - channel
+    TokenData:
+      type: object
+      x-examples:
+        Example 1:
+          token: '5200828282828210'
+          expiry_month: '12'
+          expiry_year: '2024'
+          cryptogram: AgAAAAAIKxQRszA4mNO6QWQAAAA=
+          cvv: '123'
+          last4Digit: '1112'
+          par: '4012001037141112'
+      title: TokenData
+      description: This model is for card tokenize payments
+      properties:
+        token:
+          type: string
+          minLength: 1
+          maxLength: 100
+        expiry_month:
+          type: string
+          minLength: 2
+          maxLength: 2
+          example: '09'
+        expiry_year:
+          type: string
+          minLength: 4
+          maxLength: 4
+          example: '2025'
+        cryptogram:
+          type: string
+          minLength: 1
+          maxLength: 100
+        cvv:
+          type: string
+          maxLength: 4
+          example: '123'
+        last4Digit:
+          type: string
+          minLength: 4
+          maxLength: 4
+          example: '1114'
+        par:
+          type: string
+        name:
+          type: string
+      required:
+        - token
+        - expiry_month
+        - expiry_year
+        - cryptogram
+        - cvv
+        - last4Digit
+    PurchaseRequest:
+      title: PurchaseRequest
+      type: object
+      description: This is the schema for purchase request
+      properties:
+        card_data:
+          $ref: '#/components/schemas/CardData'
+        token_data:
+          $ref: '#/components/schemas/TokenData'
+        wallet_data:
+          $ref: '#/components/schemas/WalletData'
+        netbanking_data:
+          $ref: '#/components/schemas/NetbankingData'
+        upi_data:
+          $ref: '#/components/schemas/UPIData'
+        payment_method:
+          $ref: '#/components/schemas/PaymentMethod'
+      x-examples:
+        Purchase Request:
+          card_data:
+            card_number: '4012001037141112'
+            cvv: '123'
+            expiry_month: '09'
+            expiry_year: '2025'
+          token_data:
+            token: string
+            expiry_month: '09'
+            expiry_year: '2025'
+            cryptogram: string
+            cvv: '123'
+            last4Digit: '1114'
+            par: string
+            name: string
+          wallet_data:
+            merchant_payment_code: string
+          netbanking_data:
+            merchant_payment_code: string
+          upi_data:
+            vpa: string
+            channel: string
+          payment_method:
+            type: CREDIT_DEBIT
+            is_tokenized_transaction: 0
+    PaymentMethod:
+      title: Payment Method
+      type: object
+      description: 'This is the schema for payment method '
+      properties:
+        type:
+          type: string
+          example: CREDIT_DEBIT
+          enum:
+            - NONE
+            - CREDIT_DEBIT
+            - NET_BANKING
+            - EMI
+            - UPI
+            - WALLET
+            - DEBIT_EMI
+            - BUY_NOW_PAY_LATER
+            - CARDLESS
+            - PAYBYPOINTS
+        is_tokenized_transaction:
+          type: integer
+          default: 0
+          minimum: 0
+          maximum: 1
+          example: 0
+          description: Parameter is required only for payment method card.Possible values are 0 or 1
+      required:
+        - type
+      x-examples:
+        Example 1:
+          type: CREDIT_DEBIT
+          is_tokenized_transaction: 0
+    FetchPaymentTransactionDetails:
+      title: FetchPaymentTransactionDetails
+      type: object
+      properties:
+        merchant_data:
+          $ref: '#/components/schemas/MerchantData'
+        transaction_data:
+          type: object
+          properties:
+            plural_transaction_id:
+              type: string
+      description: This is the schema to fetch transaction details
+      x-examples:
+        Example 1:
+          merchant_data:
+            id: '106589'
+            unique_reference_id: TEST-ORDER-786
+          transaction_data:
+            plural_transaction_id: '78612345'
+    CaptureRequest:
+      title: CaptureRequest
+      type: object
+      description: This is the schema to capture the transaction
+      properties:
+        payment_data:
+          type: object
+          required:
+            - capture_amount
+          properties:
+            capture_amount:
+              $ref: '#/components/schemas/Amount'
+        capture_type:
+          type: string
+          default: PARTIAL
+          example: PARTIAL
+          enum:
+            - PARTIAL
+            - COMPLETE
+      required:
+        - payment_data
+        - capture_type
+      x-examples:
+        Capture Request:
+          payment_data:
+            capture_amount:
+              amount: 50000
+              currency: INR
+          capture_type: COMPLETE
+  securitySchemes:
+    Edge-Auth:
+      type: http
+      scheme: bearer
+  requestBodies: {}
+tags:
+  - name: ORDER
+  - name: PAYMENT
+  - name: POST-PAYMENT
+  - name: V3-Plural-Edge
