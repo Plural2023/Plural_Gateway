@@ -1,1 +1,0 @@
-Plural Gateway - Integration Documentations
