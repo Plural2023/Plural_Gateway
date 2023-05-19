@@ -1,1 +1,1 @@
-# Edge_Legacy_Documentations
+Plural Gateway - Integration Documentations
